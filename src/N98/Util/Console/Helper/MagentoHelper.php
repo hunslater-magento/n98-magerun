@@ -2,8 +2,16 @@
 
 namespace N98\Util\Console\Helper;
 
+use N98\Util\String;
 use Symfony\Component\Console\Helper\Helper as AbstractHelper;
+use Symfony\Component\Console\Input\ArgvInput;
+use Symfony\Component\Console\Input\InputAwareInterface;
+use Symfony\Component\Console\Input\StringInput;
+use Symfony\Component\Console\Output\NullOutput;
+use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Finder\Finder;
+use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Input\InputInterface;
 
 class MagentoHelper extends AbstractHelper
 {
@@ -13,7 +21,7 @@ class MagentoHelper extends AbstractHelper
     protected $_magentoRootFolder = null;
 
     /**
-     * @var
+     * @var string
      */
     protected $_magentoMajorVersion = \N98\Magento\Application::MAGENTO_MAJOR_VERSION_1;
 
@@ -21,6 +29,16 @@ class MagentoHelper extends AbstractHelper
      * @var bool
      */
     protected $_magentoEnterprise = false;
+
+    /**
+     * @var InputInterface
+     */
+    protected $input;
+
+    /**
+     * @var OutputInterface
+     */
+    protected $output;
 
     /**
      * Returns the canonical name of this helper.
@@ -35,21 +53,46 @@ class MagentoHelper extends AbstractHelper
     }
 
     /**
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     */
+    public function __construct(InputInterface $input = null, OutputInterface $output = null)
+    {
+        if (null === $input) {
+            $input = new ArgvInput();
+        }
+
+        if (null === $output) {
+            $output = new ConsoleOutput();
+        }
+
+        $this->input = $input;
+        $this->output = $output;
+    }
+
+    /**
      * Start Magento detection
      *
      * @param string $folder
+     * @param array $subFolders Sub-folders to check
      */
-    public function detect($folder)
+    public function detect($folder, $subFolders = array())
     {
         $folders = $this->splitPathFolders($folder);
+        $folders = $this->checkMagerunFile($folders);
         $folders = $this->checkModman($folders);
+        $folders = array_merge($folders, $subFolders);
 
         foreach (array_reverse($folders) as $searchFolder) {
+            if (!is_dir($searchFolder) || !is_readable($searchFolder)) {
+                continue;
+            }
             if ($this->_search($searchFolder)) {
-               break;
+                break;
             }
         }
     }
+
 
     /**
      * @return string
@@ -81,7 +124,7 @@ class MagentoHelper extends AbstractHelper
     }
 
     /**
-     * @param $folder
+     * @param string $folder
      *
      * @return array
      */
@@ -96,19 +139,27 @@ class MagentoHelper extends AbstractHelper
                 $folders[] = $explodedFolder;
             }
         }
+
         return $folders;
     }
 
     /**
      * Check for modman file and .basedir
      *
-     * @param $folders
+     * @param array $folders
      *
      * @return array
      */
     protected function checkModman($folders)
     {
         foreach (array_reverse($folders) as $searchFolder) {
+            if (!is_readable($searchFolder)) {
+                if (OutputInterface::VERBOSITY_DEBUG <= $this->output->getVerbosity()) {
+                    $this->output->writeln('<debug>Folder <info>' . $searchFolder . '</info> is not readable. Skip.</debug>');
+                }
+                continue;
+            }
+
             $finder = Finder::create();
             $finder
                 ->files()
@@ -118,15 +169,20 @@ class MagentoHelper extends AbstractHelper
                 ->ignoreDotFiles(false)
                 ->name('.basedir')
                 ->in($searchFolder);
+
             $count = $finder->count();
             if ($count > 0) {
                 $baseFolderContent = trim(file_get_contents($searchFolder . DIRECTORY_SEPARATOR . '.basedir'));
+                if (OutputInterface::VERBOSITY_DEBUG <= $this->output->getVerbosity()) {
+                    $this->output->writeln('<debug>Found modman .basedir file with content <info>' . $baseFolderContent . '</info></debug>');
+                }
+
                 if (!empty($baseFolderContent)) {
                     $modmanBaseFolder = $searchFolder
                                       . DIRECTORY_SEPARATOR
                                       . '..'
                                       . DIRECTORY_SEPARATOR
-                                      . trim($baseFolderContent);
+                                      . $baseFolderContent;
                     array_push($folders, $modmanBaseFolder);
                 }
             }
@@ -136,37 +192,92 @@ class MagentoHelper extends AbstractHelper
     }
 
     /**
-     * @param $searchFolder
+     * Check for .n98-magerun file
+     *
+     * @param array $folders
+     *
+     * @return array
+     */
+    protected function checkMagerunFile($folders)
+    {
+        foreach (array_reverse($folders) as $searchFolder) {
+            if (!is_readable($searchFolder)) {
+                if (OutputInterface::VERBOSITY_DEBUG <= $this->output->getVerbosity()) {
+                    $this->output->writeln('<debug>Folder <info>' . $searchFolder . '</info> is not readable. Skip.</debug>');
+                }
+                continue;
+            }
+            $finder = Finder::create();
+            $finder
+                ->files()
+                ->ignoreUnreadableDirs(true)
+                ->depth(0)
+                ->followLinks()
+                ->ignoreDotFiles(false)
+                ->name('.n98-magerun')
+                ->in($searchFolder);
+
+            $count = $finder->count();
+            if ($count > 0) {
+                $magerunFileContent = trim(file_get_contents($searchFolder . DIRECTORY_SEPARATOR . '.n98-magerun'));
+                if (OutputInterface::VERBOSITY_DEBUG <= $this->output->getVerbosity()) {
+                    $this->output->writeln('<debug>Found .n98-magerun file with content <info>' . $magerunFileContent . '</info></debug>');
+                }
+
+                $modmanBaseFolder = $searchFolder
+                    . DIRECTORY_SEPARATOR
+                    . $magerunFileContent;
+                array_push($folders, $modmanBaseFolder);
+            }
+        }
+
+        return $folders;
+    }
+
+    /**
+     * @param string $searchFolder
+     *
+     * @return bool
      */
     protected function _search($searchFolder)
     {
+        if (OutputInterface::VERBOSITY_DEBUG <= $this->output->getVerbosity()) {
+            $this->output->writeln('<debug>Search for Magento in folder <info>' . $searchFolder . '</info></debug>');
+        }
+
+        if (!is_dir($searchFolder . '/app')) {
+            return false;
+        }
+
         $finder = Finder::create();
         $finder
-            ->directories()
             ->ignoreUnreadableDirs(true)
             ->depth(0)
             ->followLinks()
-            ->name('app')
-            ->name('skin')
-            ->name('lib')
-            ->in($searchFolder);
+            ->name('Mage.php')
+            ->name('bootstrap.php')
+            ->name('autoload.php')
+            ->in($searchFolder . '/app');
 
-        if ($finder->count() >= 2) {
+        if ($finder->count() > 0) {
             $files = iterator_to_array($finder, false);
             /* @var $file \SplFileInfo */
 
             if (count($files) == 2) {
-                // Magento 2 has no skin folder.
-                // @TODO find a better magento 2.x check
+                // Magento 2 has bootstrap.php and autoload.php in app folder
                 $this->_magentoMajorVersion = \N98\Magento\Application::MAGENTO_MAJOR_VERSION_2;
             }
 
-            $this->_magentoRootFolder = dirname($files[0]->getRealPath());
+            $this->_magentoRootFolder = $searchFolder;
 
             if (is_callable(array('\Mage', 'getEdition'))) {
                 $this->_magentoEnterprise = (\Mage::getEdition() == 'Enterprise');
             } else {
                 $this->_magentoEnterprise = is_dir($this->_magentoRootFolder . '/app/code/core/Enterprise');
+            }
+
+            if (OutputInterface::VERBOSITY_DEBUG <= $this->output->getVerbosity()) {
+                $this->output->writeln('<debug>Found Magento in folder <info>' . $this->_magentoRootFolder . '</info></debug>');
             }
 
             return true;

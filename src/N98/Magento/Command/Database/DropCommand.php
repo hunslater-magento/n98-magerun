@@ -2,7 +2,6 @@
 
 namespace N98\Magento\Command\Database;
 
-use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -13,9 +12,17 @@ class DropCommand extends AbstractDatabaseCommand
     {
         $this
             ->setName('db:drop')
+            ->addOption('tables', 't', InputOption::VALUE_NONE, 'Drop all tables instead of dropping the database')
             ->addOption('force', 'f', InputOption::VALUE_NONE, 'Force')
             ->setDescription('Drop current database')
         ;
+
+        $help = <<<HELP
+The command prompts before dropping the database. If --force option is specified it
+directly drops the database.
+The configured user in app/etc/local.xml must have "DROP" privileges.
+HELP;
+        $this->setHelp($help);
     }
 
     /**
@@ -27,6 +34,7 @@ class DropCommand extends AbstractDatabaseCommand
     {
         $this->detectDbSettings($output);
         $dialog = $this->getHelperSet()->get('dialog');
+        $dbHelper = $this->getHelper('database');
 
         if ($input->getOption('force')) {
             $shouldDrop = true;
@@ -35,10 +43,11 @@ class DropCommand extends AbstractDatabaseCommand
         }
 
         if ($shouldDrop) {
-            $db = $this->_getConnection();
-            $db->query("DROP DATABASE `" . $this->dbSettings['dbname'] . "`");
-            $output->writeln('<info>Dropped database</info> <comment>' . $this->dbSettings['dbname'] . '</comment>');
+            if ($input->getOption('tables')) {
+                $dbHelper->dropTables($output);
+            } else {
+                $dbHelper->dropDatabase($output);
+            }
         }
     }
-
 }

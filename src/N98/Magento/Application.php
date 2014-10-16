@@ -2,104 +2,28 @@
 
 namespace N98\Magento;
 
-use N98\Magento\Command\Admin\DisableNotificationsCommand;
-use N98\Magento\Command\Admin\User\ChangePasswordCommand as ChangeAdminUserPasswordCommand;
-use N98\Magento\Command\Admin\User\CreateUserCommand as AdminUserCreateCommand;
-use N98\Magento\Command\Admin\User\ListCommand as AdminUserListCommand;
-use N98\Magento\Command\Cache\CleanCommand as CacheCleanCommand;
-use N98\Magento\Command\Cache\DisableCommand as CacheDisableCommand;
-use N98\Magento\Command\Cache\EnableCommand as CacheEnableCommand;
-use N98\Magento\Command\Cache\FlushCommand as CacheFlushCommand;
-use N98\Magento\Command\Cache\ListCommand as CacheListCommand;
-use N98\Magento\Command\Cms\Banner\ToggleCommand as MagentoCmsBannerToggleCommand;
-use N98\Magento\Command\Cms\Page\PublishCommand as MagentoCmsPagePublishCommand;
-use N98\Magento\Command\Config\DeleteCommand as ConfigDeleteCommand;
-use N98\Magento\Command\Config\DumpCommand as ConfigPrintCommand;
-use N98\Magento\Command\Config\GetCommand as ConfigGetCommand;
-use N98\Magento\Command\Config\SetCommand as ConfigSetCommand;
-use N98\Magento\Command\Config\SearchCommand as ConfigSearchCommand;
 use N98\Magento\Command\ConfigurationLoader;
-use N98\Magento\Command\Customer\ChangePasswordCommand as CustomerChangePasswordCommand;
-use N98\Magento\Command\Customer\CreateCommand as CustomerCreateCommand;
-use N98\Magento\Command\Customer\CreateDummyCommand as CustomerCreateDummyCommand;
-use N98\Magento\Command\Customer\InfoCommand as CustomerInfoCommand;
-use N98\Magento\Command\Customer\ListCommand as CustomerListCommand;
-use N98\Magento\Command\Database\ConsoleCommand as DatabaseConsoleCommand;
-use N98\Magento\Command\Database\CreateCommand as DatabaseCreateCommand;
-use N98\Magento\Command\Database\DropCommand as DatabaseDropCommand;
-use N98\Magento\Command\Database\DumpCommand as DatabaseDumpCommand;
-use N98\Magento\Command\Database\ImportCommand as DatabaseImportCommand;
-use N98\Magento\Command\Database\InfoCommand as DatabaseInfoCommand;
-use N98\Magento\Command\Database\QueryCommand as DatabaseQueryCommand;
-use N98\Magento\Command\Design\DemoNoticeCommand as DesignDemoNoticeCommand;
-use N98\Magento\Command\Developer\Ide\PhpStorm\MetaCommand as DevelopmentIdePhpStormMetaCommand;
-use N98\Magento\Command\Developer\Setup\Script\AttributeCommand as DevelopmentSetupScriptAttributeCommand;
-use N98\Magento\Command\Developer\ConsoleCommand as DevelopmentConsoleCommand;
-use N98\Magento\Command\Developer\Log\DbCommand as DevelopmentLogDbCommand;
-use N98\Magento\Command\Developer\Log\LogCommand as DevelopmentLogCommand;
-use N98\Magento\Command\Developer\Log\SizeCommand as DevelopmentLogSizeCommand;
-use N98\Magento\Command\Developer\Module\CreateCommand as ModuleCreateCommand;
-use N98\Magento\Command\Developer\Module\ListCommand as ModuleListCommand;
-use N98\Magento\Command\Developer\Module\Observer\ListCommand as ModuleObserverListCommand;
-use N98\Magento\Command\Developer\Module\Rewrite\ConflictsCommand as ModuleRewriteConflictsCommand;
-use N98\Magento\Command\Developer\Module\Rewrite\ListCommand as ModuleRewriteListCommand;
-use N98\Magento\Command\Developer\Module\Dependencies\OnCommand as ModuleDependenciesOnCommand;
-use N98\Magento\Command\Developer\Module\Dependencies\FromCommand as ModuleDependenciesFromCommand;
-use N98\Magento\Command\Developer\ProfilerCommand;
-use N98\Magento\Command\Developer\Report\CountCommand as DevelopmentReportCountCommand;
-use N98\Magento\Command\Developer\ClassLookupCommand as DevelopmentClassLookupCommand;
-use N98\Magento\Command\Developer\SymlinksCommand;
-use N98\Magento\Command\Developer\TemplateHintsBlocksCommand;
-use N98\Magento\Command\Developer\TemplateHintsCommand;
-use N98\Magento\Command\Developer\Theme\DuplicatesCommand as ThemeDuplicatesCommand;
-use N98\Magento\Command\Developer\Theme\ListCommand as ThemeListCommand;
-use N98\Magento\Command\Developer\TranslateInlineAdminCommand;
-use N98\Magento\Command\Developer\TranslateInlineShopCommand;
-use N98\Magento\Command\Indexer\ListCommand as IndexerListCommand;
-use N98\Magento\Command\Indexer\ReindexAllCommand as IndexerReindexAllCommand;
-use N98\Magento\Command\Indexer\ReindexCommand as IndexerReindexCommand;
-use N98\Magento\Command\Installer\InstallCommand;
-use N98\Magento\Command\Installer\UninstallCommand;
-use N98\Magento\Command\LocalConfig\GenerateCommand as GenerateLocalXmlConfigCommand;
-use N98\Magento\Command\MagentoConnect\DownloadExtensionCommand as MagentoConnectionDownloadExtensionCommand;
-use N98\Magento\Command\MagentoConnect\InstallExtensionCommand as MagentoConnectionInstallExtensionCommand;
-use N98\Magento\Command\MagentoConnect\ListExtensionsCommand as MagentoConnectionListExtensionsCommand;
-use N98\Magento\Command\MagentoConnect\UpgradeExtensionCommand as MagentoConnectionUpgradeExtensionCommand;
-use N98\Magento\Command\OpenBrowserCommand;
-use N98\Magento\Command\ScriptCommand;
-use N98\Magento\Command\SelfUpdateCommand as SelfUpdateCommand;
-use N98\Magento\Command\ShellCommand;
-use N98\Magento\Command\System\CheckCommand as SystemCheckCommand;
-use N98\Magento\Command\System\Cron\HistoryCommand as SystemCronHistoryCommand;
-use N98\Magento\Command\System\Cron\ListCommand as SystemCronListCommand;
-use N98\Magento\Command\System\Cron\RunCommand as SystemCronRunCommand;
-use N98\Magento\Command\System\InfoCommand as SystemInfoCommand;
-use N98\Magento\Command\System\MaintenanceCommand as SystemMaintenanceCommand;
-use N98\Magento\Command\System\Setup\CompareVersionsCommand as SetupCompareVersionsCommand;
-use N98\Magento\Command\System\Setup\RunCommand as SetupRunScriptsCommand;
-use N98\Magento\Command\System\Store\Config\BaseUrlListCommand as SystemStoreConfigBaseUrlListCommand;
-use N98\Magento\Command\System\Store\ListCommand as SystemStoreListCommand;
-use N98\Magento\Command\System\Url\ListCommand as SystemUrlListCommand;
-use N98\Magento\Command\System\Website\ListCommand as SystemWebsiteListCommand;
 use N98\Magento\EntryPoint\Magerun as MagerunEntryPoint;
 use N98\Util\ArrayFunctions;
-use N98\Util\Console\Helper\ParameterHelper;
-use N98\Util\Console\Helper\TableHelper;
 use N98\Util\Console\Helper\TwigHelper;
 use N98\Util\Console\Helper\MagentoHelper;
 use N98\Util\OperatingSystem;
 use N98\Util\String;
 use Symfony\Component\Console\Application as BaseApplication;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Event\ConsoleEvent;
+use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\ConsoleOutput;
+use Symfony\Component\Console\Output\NullOutput;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\EventDispatcher\Event;
+use Symfony\Component\EventDispatcher\EventDispatcher;
 
 class Application extends BaseApplication
 {
-    const WARNING_ROOT_USER = '<error>It\'s not recommended to run n98-magerun as root user</error>';
     /**
      * @var int
      */
@@ -115,7 +39,7 @@ class Application extends BaseApplication
     /**
      * @var string
      */
-    const APP_VERSION = '1.76.0';
+    const APP_VERSION = '1.91.0';
 
     /**
      * @var string
@@ -136,6 +60,16 @@ class Application extends BaseApplication
      * @var array
      */
     protected $config = array();
+
+    /**
+     * @var ConfigurationLoader
+     */
+    protected $configurationLoader = null;
+
+    /**
+     * @var array
+     */
+    protected $partialConfig = array();
 
     /**
      * @var string
@@ -168,8 +102,19 @@ class Application extends BaseApplication
     protected $_isInitialized = false;
 
     /**
+     * @var \Symfony\Component\EventDispatcher\EventDispatcher
+     */
+    protected $dispatcher;
+
+    /**
+     * If root dir is set by root-dir option this flag is true
+     *
+     * @var bool
+     */
+    protected $_directRootDir = false;
+
+    /**
      * @param \Composer\Autoload\ClassLoader $autoloader
-     * @param bool                           $isPharMode
      */
     public function __construct($autoloader = null)
     {
@@ -191,28 +136,63 @@ class Application extends BaseApplication
         );
         $inputDefinition->addOption($rootDirOption);
 
+        $skipExternalConfig = new InputOption(
+            '--skip-config',
+            '',
+            InputOption::VALUE_OPTIONAL,
+            'Do not load any custom config.'
+        );
+        $inputDefinition->addOption($skipExternalConfig);
+
         return $inputDefinition;
     }
 
     /**
-     * Search for magento root folder
+     * Get names of sub-folders to be scanned during Magento detection
+     * @return array
      */
-    public function detectMagento()
+    public function getDetectSubFolders()
+    {
+        if (isset($this->partialConfig['detect'])) {
+            if (isset($this->partialConfig['detect']['subFolders'])) {
+                return $this->partialConfig['detect']['subFolders'];
+            }
+        }
+        return array();
+    }
+
+    /**
+     * Search for magento root folder
+     *
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     * @return void
+     */
+    public function detectMagento(InputInterface $input = null, OutputInterface $output = null)
     {
         if ($this->getMagentoRootFolder() === null) {
             $this->_checkRootDirOption();
-            if (OperatingSystem::isWindows()) {
-                $folder = exec('@echo %cd%'); // @TODO not currently tested!!!
+            if (function_exists('exec')) {
+                if (OperatingSystem::isWindows()) {
+                    $folder = exec('@echo %cd%'); // @TODO not currently tested!!!
+                } else {
+                    $folder = exec('pwd');
+                }
             } else {
-                $folder = exec('pwd');
+                $folder = getcwd();
             }
         } else {
             $folder = $this->getMagentoRootFolder();
         }
 
-        $this->getHelperSet()->set(new MagentoHelper(), 'magento');
+        $this->getHelperSet()->set(new MagentoHelper($input, $output), 'magento');
         $magentoHelper = $this->getHelperSet()->get('magento'); /* @var $magentoHelper MagentoHelper */
-        $magentoHelper->detect($folder);
+        if (!$this->_directRootDir) {
+            $subFolders = $this->getDetectSubFolders();
+        } else {
+            $subFolders = array();
+        }
+        $magentoHelper->detect($folder, $subFolders);
         $this->_magentoRootFolder = $magentoHelper->getRootFolder();
         $this->_magentoEnterprise = $magentoHelper->isEnterpriseEdition();
         $this->_magentoMajorVersion = $magentoHelper->getMajorVersion();
@@ -220,12 +200,12 @@ class Application extends BaseApplication
 
     /**
      * Add own helpers to helperset.
+     *
+     * @return void
      */
     protected function registerHelpers()
     {
         $helperSet = $this->getHelperSet();
-        $helperSet->set(new TableHelper(), 'table');
-        $helperSet->set(new ParameterHelper(), 'parameter');
 
         // Twig
         $twigBaseDirs = array(
@@ -235,6 +215,12 @@ class Application extends BaseApplication
             $twigBaseDirs = array_merge(array_reverse($this->config['twig']['baseDirs']), $twigBaseDirs);
         }
         $helperSet->set(new TwigHelper($twigBaseDirs), 'twig');
+
+        foreach ($this->config['helpers'] as $helperName => $helperClass) {
+            if (class_exists($helperClass)) {
+                $helperSet->set(new $helperClass(), $helperName);
+            }
+        }
     }
 
     /**
@@ -249,13 +235,23 @@ class Application extends BaseApplication
         }
     }
 
+    /**
+     * @return void
+     */
     protected function registerCustomCommands()
     {
         if (isset($this->config['commands']['customCommands'])
             && is_array($this->config['commands']['customCommands'])
         ) {
             foreach ($this->config['commands']['customCommands'] as $commandClass) {
-                $this->add(new $commandClass);
+                if (is_array($commandClass)) { // Support for key => value (name -> class)
+                    $resolvedCommandClass = current($commandClass);
+                    $command = new $resolvedCommandClass();
+                    $command->setName(key($commandClass));
+                } else {
+                    $command = new $commandClass();
+                }
+                $this->add($command);
             }
         }
     }
@@ -322,54 +318,58 @@ class Application extends BaseApplication
     }
 
     /**
+     * @TODO Move logic into "EventSubscriber"
+     *
      * @param OutputInterface $output
      * @return bool
      */
     public function checkVarDir(OutputInterface $output)
     {
-        $tempVarDir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'magento' . DIRECTORY_SEPARATOR .  'var';
+        if (OutputInterface::VERBOSITY_NORMAL <= $output->getVerbosity()) {
+            $tempVarDir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'magento' . DIRECTORY_SEPARATOR .  'var';
 
-        if (is_dir($tempVarDir)) {
-            $this->detectMagento();
-            /* If magento is not installed yet, don't check */
-            if ($this->_magentoRootFolder === null
-                || !file_exists($this->_magentoRootFolder . '/app/etc/local.xml')
-            ) {
-                return;
-            }
-
-            try {
-                $this->initMagento();
-            } catch (\Exception $e) {
-                $message = 'Cannot initialize Magento. Please check your configuration. '
-                         . 'Some n98-magerun command will not work. Got message: ';
-                if (OutputInterface::VERBOSITY_VERY_VERBOSE <= $output->getVerbosity()) {
-                    $message .= $e->getTraceAsString();
-                } else {
-                    $message .= $e->getMessage();
+            if (is_dir($tempVarDir)) {
+                $this->detectMagento(null, $output);
+                /* If magento is not installed yet, don't check */
+                if ($this->_magentoRootFolder === null
+                    || !file_exists($this->_magentoRootFolder . '/app/etc/local.xml')
+                ) {
+                    return;
                 }
-                $output->writeln($message);
 
-                return;
-            }
+                try {
+                    $this->initMagento();
+                } catch (\Exception $e) {
+                    $message = 'Cannot initialize Magento. Please check your configuration. '
+                             . 'Some n98-magerun command will not work. Got message: ';
+                    if (OutputInterface::VERBOSITY_VERY_VERBOSE <= $output->getVerbosity()) {
+                        $message .= $e->getTraceAsString();
+                    } else {
+                        $message .= $e->getMessage();
+                    }
+                    $output->writeln($message);
 
-            $configOptions = new \Mage_Core_Model_Config_Options();
-            $currentVarDir = $configOptions->getVarDir();
+                    return;
+                }
 
-            if ($currentVarDir == $tempVarDir) {
-                $output->writeln(sprintf('<error>Fallback folder %s is used in n98-magerun</error>', $tempVarDir));
-                $output->writeln('');
-                $output->writeln('n98-magerun is using the fallback folder. If there is another folder configured for Magento, this can cause serious problems.');
-                $output->writeln('Please refer to https://github.com/netz98/n98-magerun/wiki/File-system-permissions for more information.');
-                $output->writeln('');
-            } else {
-                $output->writeln(sprintf('<error>Folder %s found, but not used in n98-magerun</error>', $tempVarDir));
-                $output->writeln('');
-                $output->writeln(sprintf('This might cause serious problems. n98-magerun is using the configured var-folder <comment>%s</comment>', $currentVarDir));
-                $output->writeln('Please refer to https://github.com/netz98/n98-magerun/wiki/File-system-permissions for more information.');
-                $output->writeln('');
+                $configOptions = new \Mage_Core_Model_Config_Options();
+                $currentVarDir = $configOptions->getVarDir();
 
-                return false;
+                if ($currentVarDir == $tempVarDir) {
+                    $output->writeln(sprintf('<warning>Fallback folder %s is used in n98-magerun</warning>', $tempVarDir));
+                    $output->writeln('');
+                    $output->writeln('n98-magerun is using the fallback folder. If there is another folder configured for Magento, this can cause serious problems.');
+                    $output->writeln('Please refer to https://github.com/netz98/n98-magerun/wiki/File-system-permissions for more information.');
+                    $output->writeln('');
+                } else {
+                    $output->writeln(sprintf('<warning>Folder %s found, but not used in n98-magerun</warning>', $tempVarDir));
+                    $output->writeln('');
+                    $output->writeln(sprintf('This might cause serious problems. n98-magerun is using the configured var-folder <comment>%s</comment>', $currentVarDir));
+                    $output->writeln('Please refer to https://github.com/netz98/n98-magerun/wiki/File-system-permissions for more information.');
+                    $output->writeln('');
+
+                    return false;
+                }
             }
         }
     }
@@ -476,31 +476,19 @@ class Application extends BaseApplication
      */
     public function doRun(InputInterface $input, OutputInterface $output)
     {
+        $event = new ConsoleEvent(new Command('dummy'), $input, $output);
+        $this->dispatcher->dispatch('console.run.before', $event);
+
         $input = $this->checkConfigCommandAlias($input);
-        $this->checkRunningAsRootUser($output);
-        $this->checkVarDir($output);
+        if ($output instanceof ConsoleOutput) {
+            $this->checkVarDir($output->getErrorOutput());
+        }
 
         if (OutputInterface::VERBOSITY_DEBUG <= $output->getVerbosity()) {
             $output->writeln('DEBUG');
         }
 
-        parent::doRun($input, $output);
-    }
-
-    /**
-     * Display a warning if a running n98-magerun as root user
-     */
-    protected function checkRunningAsRootUser(OutputInterface $output)
-    {
-        if (OperatingSystem::isLinux() || OperatingSystem::isMacOs()) {
-            if (function_exists('posix_getuid')) {
-                if (posix_getuid() === 0) {
-                    $output->writeln('');
-                    $output->writeln(self::WARNING_ROOT_USER);
-                    $output->writeln('');
-                }
-            }
-        }
+        return parent::doRun($input, $output);
     }
 
     /**
@@ -533,48 +521,28 @@ class Application extends BaseApplication
     }
 
     /**
-     * Returns an array of possible abbreviations given a set of names.
-     * This is the reverted version if changed method of symfony framework.
-     * I reverted this to enable commands like customer:create and customer:create:dummy.
-     * This will not work with current dev-master of symfony console components which
-     * causes an error like "Command "customer:create" is ambiguous".
-     *
-     * @TODO Check if this is a bug in symfony or wanted.
-     * @param array $names An array of names
-     *
-     * @return array An array of abbreviations
-     */
-    public static function getAbbreviations($names)
-    {
-        $abbrevs = array();
-        foreach ($names as $name) {
-            for ($len = strlen($name) - 1; $len > 0; --$len) {
-                $abbrev = substr($name, 0, $len);
-                if (!isset($abbrevs[$abbrev])) {
-                    $abbrevs[$abbrev] = array($name);
-                } else {
-                    $abbrevs[$abbrev][] = $name;
-                }
-            }
-        }
-
-        // Non-abbreviations always get entered, even if they aren't unique
-        foreach ($names as $name) {
-            $abbrevs[$name] = array($name);
-        }
-
-        return $abbrevs;
-    }
-
-    /**
      * @param InputInterface $input
      * @param OutputInterface $output
      * @return int
      */
     public function run(InputInterface $input = null, OutputInterface $output = null)
     {
+        if (null === $input) {
+            $input = new ArgvInput();
+        }
+
+        if (null === $output) {
+            $output = new ConsoleOutput();
+        }
+        $this->_addOutputStyles($output);
+        if ($output instanceof ConsoleOutput) {
+            $this->_addOutputStyles($output->getErrorOutput());
+        }
+
+        $this->configureIO($input, $output);
+
         try {
-            $this->init();
+            $this->init(array(), $input, $output);
         } catch (\Exception $e) {
             $output = new ConsoleOutput();
             $this->renderException($e, $output);
@@ -591,125 +559,70 @@ class Application extends BaseApplication
     }
 
     /**
-     * @return void
-     */
-    protected function registerCommands()
-    {
-        $this->add(new GenerateLocalXmlConfigCommand());
-        $this->add(new DatabaseDumpCommand());
-        $this->add(new DatabaseDropCommand());
-        $this->add(new DatabaseInfoCommand());
-        $this->add(new DatabaseImportCommand());
-        $this->add(new DatabaseConsoleCommand());
-        $this->add(new DatabaseCreateCommand());
-        $this->add(new DatabaseQueryCommand());
-        $this->add(new ConfigDeleteCommand());
-        $this->add(new ConfigPrintCommand());
-        $this->add(new ConfigGetCommand());
-        $this->add(new ConfigSetCommand());
-        $this->add(new ConfigSearchCommand());
-        $this->add(new CacheCleanCommand());
-        $this->add(new CacheFlushCommand());
-        $this->add(new CacheListCommand());
-        $this->add(new CacheEnableCommand());
-        $this->add(new CacheDisableCommand());
-        $this->add(new IndexerListCommand());
-        $this->add(new IndexerReindexCommand());
-        $this->add(new IndexerReindexAllCommand());
-        $this->add(new ChangeAdminUserPasswordCommand());
-        $this->add(new AdminUserListCommand());
-        $this->add(new AdminUserCreateCommand());
-        $this->add(new CustomerCreateCommand());
-        $this->add(new CustomerListCommand());
-        $this->add(new CustomerChangePasswordCommand());
-        $this->add(new CustomerCreateDummyCommand());
-        $this->add(new CustomerInfoCommand());
-        $this->add(new DisableNotificationsCommand());
-        $this->add(new DesignDemoNoticeCommand());
-        $this->add(new InstallCommand());
-        $this->add(new UninstallCommand());
-        $this->add(new SystemMaintenanceCommand());
-        $this->add(new SystemInfoCommand());
-        $this->add(new SystemCheckCommand());
-        $this->add(new SystemStoreListCommand());
-        $this->add(new SystemStoreConfigBaseUrlListCommand());
-        $this->add(new SystemWebsiteListCommand());
-        $this->add(new SystemCronListCommand());
-        $this->add(new SystemCronRunCommand());
-        $this->add(new SystemCronHistoryCommand());
-        $this->add(new SystemUrlListCommand());
-        $this->add(new SetupRunScriptsCommand());
-        $this->add(new SetupCompareVersionsCommand());
-        $this->add(new TemplateHintsCommand());
-        $this->add(new TemplateHintsBlocksCommand());
-        $this->add(new TranslateInlineShopCommand());
-        $this->add(new TranslateInlineAdminCommand());
-        $this->add(new ThemeDuplicatesCommand());
-        $this->add(new ThemeListCommand());
-        $this->add(new ProfilerCommand());
-        $this->add(new SymlinksCommand());
-        $this->add(new DevelopmentLogCommand());
-        $this->add(new DevelopmentLogDbCommand());
-        $this->add(new DevelopmentLogSizeCommand());
-        $this->add(new DevelopmentReportCountCommand());
-        $this->add(new DevelopmentClassLookupCommand());
-        $this->add(new DevelopmentIdePhpStormMetaCommand());
-        $this->add(new DevelopmentSetupScriptAttributeCommand());
-        $this->add(new ModuleListCommand());
-        $this->add(new ModuleRewriteListCommand());
-        $this->add(new ModuleRewriteConflictsCommand());
-        $this->add(new ModuleDependenciesOnCommand());
-        $this->add(new ModuleDependenciesFromCommand());
-        $this->add(new ModuleCreateCommand());
-        $this->add(new ModuleObserverListCommand());
-        $this->add(new ModuleDependenciesOnCommand());
-        $this->add(new ShellCommand());
-        $this->add(new ScriptCommand());
-        $this->add(new MagentoConnectionListExtensionsCommand());
-        $this->add(new MagentoConnectionInstallExtensionCommand());
-        $this->add(new MagentoConnectionDownloadExtensionCommand());
-        $this->add(new MagentoConnectionUpgradeExtensionCommand());
-        $this->add(new OpenBrowserCommand());
-        $this->add(new MagentoCmsPagePublishCommand());
-        $this->add(new MagentoCmsBannerToggleCommand());
-        $this->add(new DevelopmentConsoleCommand());
-        $this->add(new SelfUpdateCommand());
-    }
-
-    /**
      * @param array $initConfig
-     *
-     * @return array
-     */
-    protected function _loadConfig($initConfig)
-    {
-        $configLoader = new ConfigurationLoader($initConfig, $this->_magentoRootFolder);
-
-        return $configLoader->toArray();
-    }
-
-    /**
-     * @param array $initConfig
+     * @param InputInterface $input
+     * @param OutputInterface $output
      *
      * @return void
      */
-    public function init($initConfig = array())
+    public function init($initConfig = array(), InputInterface $input = null, OutputInterface $output = null)
     {
         if (!$this->_isInitialized) {
             // Suppress DateTime warnings
             date_default_timezone_set(@date_default_timezone_get());
 
-            $this->detectMagento();
-            $this->config = $this->_loadConfig(ArrayFunctions::mergeArrays($this->config, $initConfig));
-            $this->registerHelpers();
+            $loadExternalConfig = !$this->_checkSkipConfigOption();
+            if ($output === null) {
+                $output = new NullOutput();
+            }
+            $configLoader = $this->getConfigurationLoader($initConfig, $output);
+            $this->partialConfig = $configLoader->getPartialConfig($loadExternalConfig);
+            $this->detectMagento($input, $output);
+            $configLoader->loadStageTwo($this->_magentoRootFolder, $loadExternalConfig);
+            $this->config = $configLoader->toArray();;
+            $this->dispatcher = new EventDispatcher();
+            $this->setDispatcher($this->dispatcher);
             if ($this->autoloader) {
                 $this->registerCustomAutoloaders();
+                $this->registerEventSubscribers();
                 $this->registerCustomCommands();
             }
-            $this->registerCommands();
+            $this->registerHelpers();
 
             $this->_isInitialized = true;
         }
+    }
+
+    /**
+     * @param array $initConfig
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     */
+    public function reinit($initConfig = array(), InputInterface $input = null, OutputInterface $output = null)
+    {
+        $this->_isInitialized = false;
+        $this->init($initConfig, $input, $output);
+    }
+
+    /**
+     * @return void
+     */
+    protected function registerEventSubscribers()
+    {
+        foreach ($this->config['event']['subscriber'] as $subscriberClass) {
+            $subscriber = new $subscriberClass();
+            $this->dispatcher->addSubscriber($subscriber);
+        }
+    }
+
+    /**
+     * @return bool
+     */
+    protected function _checkSkipConfigOption()
+    {
+        $skipConfigOption = getopt('', array('skip-config'));
+
+        return count($skipConfigOption) > 0;
     }
 
     /**
@@ -720,7 +633,13 @@ class Application extends BaseApplication
         $specialGlobalOptions = getopt('', array('root-dir:'));
 
         if (count($specialGlobalOptions) > 0) {
+            if (isset($specialGlobalOptions['root-dir'][0])
+                && $specialGlobalOptions['root-dir'][0] == '~'
+            ) {
+                $specialGlobalOptions['root-dir'] = OperatingSystem::getHomeDir() . substr($specialGlobalOptions['root-dir'], 1);
+            }
             $folder = realpath($specialGlobalOptions['root-dir']);
+            $this->_directRootDir = true;
             if (is_dir($folder)) {
                 \chdir($folder);
 
@@ -763,8 +682,74 @@ class Application extends BaseApplication
      */
     protected function _initMagento1()
     {
-        require_once $this->getMagentoRootFolder() . '/app/Mage.php';
-        \Mage::app('admin');
+        $initSettings = $this->config['init'];
+
+        if (!class_exists('Mage')) {
+            $autoloaders = spl_autoload_functions();
+            require_once $this->getMagentoRootFolder() . '/app/Mage.php';
+            // Restore autoloaders that might be removed by extensions that overwrite Varien/Autoload
+            $this->_restoreAutoloaders($autoloaders);
+        }
+
+        \Mage::app($initSettings['code'], $initSettings['type'], $initSettings['options']);
     }
 
+    /**
+     * @return void
+     */
+    protected function _restoreAutoloaders($loaders) {
+        $current_loaders = spl_autoload_functions();
+        foreach ($loaders as $function) {
+            if (!in_array($function, $current_loaders)) {
+                spl_autoload_register($function);
+            }
+        }
+    }
+
+    /**
+     * @return \Symfony\Component\EventDispatcher\EventDispatcher
+     */
+    public function getDispatcher()
+    {
+        return $this->dispatcher;
+    }
+
+    /**
+     * @param array $initConfig
+     * @param OutputInterface $output
+     * @return ConfigurationLoader
+     */
+    public function getConfigurationLoader($initConfig = array(), OutputInterface $output)
+    {
+        if ($this->configurationLoader === null) {
+            $this->configurationLoader = new ConfigurationLoader(
+                ArrayFunctions::mergeArrays($this->config, $initConfig),
+                $this->isPharMode(),
+                $output
+            );
+        }
+
+        return $this->configurationLoader;
+    }
+
+    /**
+     * @param \N98\Magento\Command\ConfigurationLoader $configurationLoader
+     *
+     * @return $this
+     */
+    public function setConfigurationLoader($configurationLoader)
+    {
+        $this->configurationLoader = $configurationLoader;
+
+        return $this;
+    }
+
+    /**
+     * @param OutputInterface $output
+     */
+    protected function _addOutputStyles(OutputInterface $output)
+    {
+        $output->getFormatter()->setStyle('debug', new OutputFormatterStyle('magenta', 'white'));
+        $output->getFormatter()->setStyle('warning', new OutputFormatterStyle('red', 'yellow', array('bold')));
+    }
 }

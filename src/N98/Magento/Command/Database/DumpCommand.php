@@ -31,11 +31,55 @@ class DumpCommand extends AbstractDatabaseCommand
             ->addOption('only-command', null, InputOption::VALUE_NONE, 'Print only mysqldump command. Do not execute')
             ->addOption('print-only-filename', null, InputOption::VALUE_NONE, 'Execute and prints no output except the dump filename')
             ->addOption('no-single-transaction', null, InputOption::VALUE_NONE, 'Do not use single-transaction (not recommended, this is blocking)')
-            ->addOption('human-readable', null, InputOption::VALUE_NONE, 'Use a single insert with column names per row. Useful to track database differences, but significantly slows down a later import')
+            ->addOption('human-readable', null, InputOption::VALUE_NONE, 'Use a single insert with column names per row. Useful to track database differences. Use db:import --optimize for speeding up the import.')
+            ->addOption('add-routines', null, InputOption::VALUE_NONE, 'Include stored routines in dump (procedures & functions)')
             ->addOption('stdout', null, InputOption::VALUE_NONE, 'Dump to stdout')
             ->addOption('strip', 's', InputOption::VALUE_OPTIONAL, 'Tables to strip (dump only structure of those tables)')
             ->addOption('force', 'f', InputOption::VALUE_NONE, 'Do not prompt if all options are defined')
             ->setDescription('Dumps database with mysqldump cli client according to informations from local.xml');
+
+        $help = <<<HELP
+Dumps configured magento database with `mysqldump`.
+You must have installed the MySQL client tools.
+
+On debian systems run `apt-get install mysql-client` to do that.
+
+The command reads app/etc/local.xml to find the correct settings.
+If you like to skip data of some tables you can use the --strip option.
+The strip option creates only the structure of the defined tables and
+forces `mysqldump` to skip the data.
+
+Dumps your database and excludes some tables. This is useful i.e. for development.
+
+Separate each table to strip by a space.
+You can use wildcards like * and ? in the table names to strip multiple tables.
+In addition you can specify pre-defined table groups, that start with an @
+Example: "dataflow_batch_export unimportant_module_* @log
+
+   $ n98-magerun.phar db:dump --strip="@stripped"
+
+Available Table Groups:
+
+* @log Log tables
+* @dataflowtemp Temporary tables of the dataflow import/export tool
+* @stripped Standard definition for a stripped dump (logs and dataflow)
+* @sales Sales data (orders, invoices, creditmemos etc)
+* @customers Customer data
+* @trade Current trade data (customers and orders). You usally do not want those in developer systems.
+* @development Removes logs and trade data so developers do not have to work with real customer data
+
+Extended: https://github.com/netz98/n98-magerun/wiki/Stripped-Database-Dumps
+
+See it in action: http://youtu.be/ttjZHY6vThs
+
+- If you like to prepend a timestamp to the dump name the --add-time option can be used.
+
+- The command comes with a compression function. Add i.e. `--compression=gz` to dump directly in
+ gzip compressed file.
+
+HELP;
+        $this->setHelp($help);
+
     }
 
     /**
@@ -43,9 +87,14 @@ class DumpCommand extends AbstractDatabaseCommand
      */
     public function isEnabled()
     {
-        return !OperatingSystem::isWindows();
+        return function_exists('exec') && !OperatingSystem::isWindows();
     }
 
+    /**
+     * @return array
+     * @deprecated Use database helper
+     * @throws \Exception
+     */
     public function getTableDefinitions()
     {
         $this->commandConfig = $this->getCommandConfig();
@@ -135,7 +184,7 @@ class DumpCommand extends AbstractDatabaseCommand
 
         $stripTables = false;
         if ($input->getOption('strip')) {
-            $stripTables = $this->resolveTables(explode(' ', $input->getOption('strip')), $this->getTableDefinitions());
+            $stripTables = $this->getHelper('database')->resolveTables(explode(' ', $input->getOption('strip')), $this->getTableDefinitions());
             if (!$input->getOption('stdout') && !$input->getOption('only-command')
                 && !$input->getOption('print-only-filename')
             ) {
@@ -146,17 +195,21 @@ class DumpCommand extends AbstractDatabaseCommand
         }
 
         $dumpOptions = '';
-        if ($input->getOption('no-single-transaction')) {
-            $dumpOptions = '--single-transaction ';
+        if (!$input->getOption('no-single-transaction')) {
+            $dumpOptions = '--single-transaction --quick ';
         }
 
         if ($input->getOption('human-readable')) {
             $dumpOptions .= '--complete-insert --skip-extended-insert ';
         }
+
+        if ($input->getOption('add-routines')) {
+            $dumpOptions .= '--routines ';
+        }
         $execs = array();
 
         if (!$stripTables) {
-            $exec = 'mysqldump ' . $dumpOptions . $this->getMysqlClientToolConnectionString();
+            $exec = 'mysqldump ' . $dumpOptions . $this->getHelper('database')->getMysqlClientToolConnectionString();
             $exec .= $this->postDumpPipeCommands();
             $exec = $compressor->getCompressingCommand($exec);
             if (!$input->getOption('stdout')) {
@@ -165,7 +218,7 @@ class DumpCommand extends AbstractDatabaseCommand
             $execs[] = $exec;
         } else {
             // dump structure for strip-tables
-            $exec = 'mysqldump ' . $dumpOptions . '--no-data ' . $this->getMysqlClientToolConnectionString();
+            $exec = 'mysqldump ' . $dumpOptions . '--no-data ' . $this->getHelper('database')->getMysqlClientToolConnectionString();
             $exec .= ' ' . implode(' ', $stripTables);
             $exec .= $this->postDumpPipeCommands();
             $exec = $compressor->getCompressingCommand($exec);
@@ -180,7 +233,7 @@ class DumpCommand extends AbstractDatabaseCommand
             }
 
             // dump data for all other tables
-            $exec = 'mysqldump ' . $dumpOptions . $ignore . $this->getMysqlClientToolConnectionString();
+            $exec = 'mysqldump ' . $dumpOptions . $ignore . $this->getHelper('database')->getMysqlClientToolConnectionString();
             $exec .= $this->postDumpPipeCommands();
             $exec = $compressor->getCompressingCommand($exec);
             if (!$input->getOption('stdout')) {
@@ -271,10 +324,11 @@ class DumpCommand extends AbstractDatabaseCommand
             }
         }
 
-        if (($fileName = $input->getArgument('filename')) === null && !$input->getOption('stdout')) {
+        if ((($fileName = $input->getArgument('filename')) === null || ($isDir = is_dir($fileName))) && !$input->getOption('stdout')) {
             /** @var DialogHelper $dialog */
             $dialog      = $this->getHelperSet()->get('dialog');
             $defaultName = $namePrefix . $this->dbSettings['dbname'] . $nameSuffix . $nameExtension;
+            if (isset($isDir) && $isDir) $defaultName = rtrim($fileName, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $defaultName;
             if (!$input->getOption('force')) {
                 $fileName = $dialog->ask($output, '<question>Filename for SQL dump:</question> [<comment>'
                     . $defaultName . '</comment>]', $defaultName

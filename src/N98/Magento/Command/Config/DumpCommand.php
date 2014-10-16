@@ -4,7 +4,6 @@ namespace N98\Magento\Command\Config;
 
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class DumpCommand extends AbstractConfigCommand
@@ -16,6 +15,28 @@ class DumpCommand extends AbstractConfigCommand
             ->addArgument('xpath', InputArgument::OPTIONAL, 'XPath to filter XML output', null)
             ->setDescription('Dump merged xml config')
         ;
+
+        $help = <<<HELP
+Dumps merged XML configuration to stdout. Useful to see all the XML.
+You can filter the XML with first argument.
+
+Examples:
+
+  Config of catalog module
+
+   $ n98-magerun.phar config:dump global/catalog
+
+   See module order in XML
+
+   $ n98-magerun.phar config:dump modules
+
+   Write output to file
+
+   $ n98-magerun.phar config:dump > extern_file.xml
+
+HELP;
+        $this->setHelp($help);
+
     }
 
     /**
@@ -33,9 +54,9 @@ class DumpCommand extends AbstractConfigCommand
                 throw new \InvalidArgumentException('xpath was not found');
             }
             $dom = new \DOMDocument();
-            $dom->loadXML($config->asXml());
             $dom->preserveWhiteSpace = false;
             $dom->formatOutput = true;
+            $dom->loadXML($config->asXml());
             $output->writeln($dom->saveXML());
         }
     }

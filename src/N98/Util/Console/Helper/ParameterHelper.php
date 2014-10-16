@@ -60,15 +60,20 @@ class ParameterHelper extends AbstractHelper
                 $question[] = '<comment>[' . ($i + 1) . ']</comment> ' . $store->getCode() . ' - ' . $store->getName() . PHP_EOL;
                 $i++;
             }
-            $question[] = '<question>Please select a store: </question>';
 
-            $storeId = $this->getHelperSet()->get('dialog')->askAndValidate($output, $question, function($typeInput) use ($stores) {
-                if (!isset($stores[$typeInput - 1])) {
-                    throw new \InvalidArgumentException('Invalid store');
-                }
+            if (count($stores) > 1) {
+                $question[] = '<question>Please select a store: </question>';
+                $storeId = $this->getHelperSet()->get('dialog')->askAndValidate($output, $question, function($typeInput) use ($stores) {
+                    if (!isset($stores[$typeInput - 1])) {
+                        throw new \InvalidArgumentException('Invalid store');
+                    }
 
-                return $stores[$typeInput - 1];
-            });
+                    return $stores[$typeInput - 1];
+                });
+            } else {
+                // only one store view available -> take it
+                $storeId = $stores[0];
+            }
 
             $store = \Mage::app()->getStore($storeId);
         }
@@ -184,6 +189,7 @@ class ParameterHelper extends AbstractHelper
     {
         $this->initValidator();
         $validator = $this->validator;
+        $errors = null;
 
         if (!empty($value)) {
             $errors = $validator->validateValue(array($name => $value), $constraints);
